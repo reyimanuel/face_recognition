@@ -3,10 +3,13 @@ import face_recognition
 import os
 import numpy as np
 
-# Function to load known faces and their names
 def load_known_faces(known_faces_dir):
     known_faces = []
     known_names = []
+
+    # Get the current directory of the script
+    current_dir = os.path.dirname(__file__)
+    known_faces_dir = os.path.join(current_dir, known_faces_dir)
 
     for name in os.listdir(known_faces_dir):
         person_dir = os.path.join(known_faces_dir, name)
@@ -19,7 +22,7 @@ def load_known_faces(known_faces_dir):
 
     return known_faces, known_names
 
-# Load known faces
+# Load known faces (assuming 'known_faces' directory is in the same directory as this script)
 known_faces_dir = 'known_faces'
 known_faces, known_names = load_known_faces(known_faces_dir)
 
