@@ -38,15 +38,16 @@ valid_extensions = ('.jpg', '.jpeg', '.png')  # Valid image extensions
 for person_name in os.listdir(known_faces_dir):
     person_dir = os.path.join(known_faces_dir, person_name)
     if os.path.isdir(person_dir):
+        person_histograms = []
         for filename in os.listdir(person_dir):
             img_path = os.path.join(person_dir, filename)
             if os.path.isfile(img_path) and img_path.lower().endswith(valid_extensions):
                 image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
                 lbp_face = compute_lbp(image)
                 hist = compute_histogram(lbp_face)
-                name = person_name
-                known_faces[name] = lbp_face
-                known_histograms[name] = hist
+                person_histograms.append(hist)
+        if person_histograms:
+            known_histograms[person_name] = person_histograms
 
 # Load the pre-trained face detection model (Haar cascade)
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -73,19 +74,18 @@ while True:
         hist_face_roi = compute_histogram(lbp_face_roi)
 
         # Compare with known faces
-        match = False
         best_match_name = "Unknown"
         best_match_score = float("inf")
 
-        for name, known_hist in known_histograms.items():
-            # Compute chi-squared distance between histograms
-            score = cv2.compareHist(hist_face_roi, known_hist, cv2.HISTCMP_CHISQR)
-            if score < best_match_score:
-                best_match_score = score
-                best_match_name = name
+        for name, histograms in known_histograms.items():
+            for known_hist in histograms:
+                # Compute chi-squared distance between histograms
+                score = cv2.compareHist(hist_face_roi, known_hist, cv2.HISTCMP_CHISQR)
+                if score < best_match_score:
+                    best_match_score = score
+                    best_match_name = name
 
         if best_match_score < 0.5:  # Adjust the threshold based on your needs
-            match = True
             cv2.putText(frame, best_match_name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
         else:
             cv2.putText(frame, "Unknown", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
